@@ -1,0 +1,13 @@
+#-----------------------------------------------------------
+# Vivado v2022.2 (64-bit)
+# SW Build 3671981 on Fri Oct 14 04:59:54 MDT 2022
+# IP Build 3669848 on Fri Oct 14 08:30:02 MDT 2022
+# Start of session at: Sat Oct 26 14:28:34 2024
+# Process ID: 127479
+# Current directory: /home/ubuntu/SDR_pluto_Prj/plutosdr-fw/hdl/library/axi_ad9361
+# Command line: vivado -mode batch -source axi_ad9361_ip.tcl
+# Log file: /home/ubuntu/SDR_pluto_Prj/plutosdr-fw/hdl/library/axi_ad9361/vivado.log
+# Journal file: /home/ubuntu/SDR_pluto_Prj/plutosdr-fw/hdl/library/axi_ad9361/vivado.jou
+# Running On: ubuntu, OS: Linux, CPU Frequency: 3417.606 MHz, CPU Physical cores: 16, Host memory: 16755 MB
+#-----------------------------------------------------------
+source axi_ad9361_ip.tcl

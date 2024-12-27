@@ -1,0 +1,13 @@
+#-----------------------------------------------------------
+# Vivado v2022.2 (64-bit)
+# SW Build 3671981 on Fri Oct 14 04:59:54 MDT 2022
+# IP Build 3669848 on Fri Oct 14 08:30:02 MDT 2022
+# Start of session at: Sat Oct 26 14:29:31 2024
+# Process ID: 127645
+# Current directory: /home/ubuntu/SDR_pluto_Prj/plutosdr-fw/hdl/library/util_cdc
+# Command line: vivado -mode batch -source util_cdc_ip.tcl
+# Log file: /home/ubuntu/SDR_pluto_Prj/plutosdr-fw/hdl/library/util_cdc/vivado.log
+# Journal file: /home/ubuntu/SDR_pluto_Prj/plutosdr-fw/hdl/library/util_cdc/vivado.jou
+# Running On: ubuntu, OS: Linux, CPU Frequency: 3417.606 MHz, CPU Physical cores: 16, Host memory: 16755 MB
+#-----------------------------------------------------------
+source util_cdc_ip.tcl
