@@ -28,7 +28,9 @@ $(error "      3] export VIVADO_VERSION=v20xx.x")
 endif
 
 TARGET ?= pluto
+TARGET_BOARD := $(TARGET)-sdr
 SUPPORTED_TARGETS:=pluto sidekiqz2
+SDIMGDIR = $(CURDIR)/build_sdimg
 
 # Include target specific constants
 include scripts/$(TARGET).mk
@@ -91,11 +93,17 @@ build/uboot-env.bin: build/uboot-env.txt
 linux/arch/arm/boot/zImage: TOOLCHAIN
 	$(TOOLS_PATH) make -C linux ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) zynq_$(TARGET)_defconfig
 	$(TOOLS_PATH) make -C linux -j $(NCORES) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) zImage UIMAGE_LOADADDR=0x8000
+linux/arch/arm/boot/uImage: TOOLCHAIN
+	$(TOOLS_PATH) make -C linux ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) zynq_$(TARGET)_defconfig
+	$(TOOLS_PATH) make -C linux -j $(NCORES) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) uImage UIMAGE_LOADADDR=0x8000
 
 .PHONY: linux/arch/arm/boot/zImage
+.PHONY: linux/arch/arm/boot/uImage
 
 
 build/zImage: linux/arch/arm/boot/zImage | build
+	cp $< $@
+build/uImage: linux/arch/arm/boot/uImage | build
 	cp $< $@
 
 ### Device Tree ###
@@ -126,7 +134,7 @@ endif
 build/rootfs.cpio.gz: buildroot/output/images/rootfs.cpio.gz | build
 	cp $< $@
 
-build/$(TARGET).itb: u-boot-xlnx/tools/mkimage build/zImage build/rootfs.cpio.gz $(TARGET_DTS_FILES) build/system_top.bit
+build/$(TARGET).itb: u-boot-xlnx/tools/mkimage build/zImage build/uImage build/rootfs.cpio.gz $(TARGET_DTS_FILES) build/system_top.bit
 	u-boot-xlnx/tools/mkimage -f scripts/$(TARGET).its $@
 
 build/system_top.xsa:  | build
@@ -177,6 +185,7 @@ build/$(TARGET).dfu: build/$(TARGET).itb
 clean-build:
 	rm -f $(notdir $(wildcard build/*))
 	rm -rf build/*
+	rm -rf build_sdimg/*
 
 clean:
 	make -C u-boot-xlnx clean
@@ -185,6 +194,7 @@ clean:
 	make -C hdl clean
 	rm -f $(notdir $(wildcard build/*))
 	rm -rf build/*
+	rm -rf build_sdimg/*
 
 zip-all: $(TARGETS)
 	zip -j build/$(ZIP_ARCHIVE_PREFIX)-fw-$(VERSION).zip $^
@@ -230,3 +240,28 @@ git-update-all:
 
 git-pull:
 	git pull --recurse-submodules
+
+## sd card ##
+sdimg: build/
+	rm -rf $(SDIMGDIR)
+	mkdir $(SDIMGDIR)
+	cp build/sdk/fsbl/Release/fsbl.elf 	$(SDIMGDIR)/fsbl.elf  
+	cp build/sdk/system_top/hw/system_top.bit 	$(SDIMGDIR)/system_top.bit
+	cp build/u-boot.elf 			$(SDIMGDIR)/u-boot.elf
+	cp build/uImage	$(SDIMGDIR)/uImage
+	cp build/zynq-$(TARGET_BOARD).dtb 	$(SDIMGDIR)/devicetree.dtb
+	cp build/uboot-env.txt  		$(SDIMGDIR)/uEnv.txt
+	cp build/rootfs.cpio.gz  		$(SDIMGDIR)/ramdisk.image.gz
+	mkimage -A arm -T ramdisk -C gzip -d $(SDIMGDIR)/ramdisk.image.gz $(SDIMGDIR)/uramdisk.image.gz
+	touch 	$(SDIMGDIR)/boot.bif
+	echo "img : {[bootloader] $(SDIMGDIR)/fsbl.elf  $(SDIMGDIR)/system_top.bit  $(SDIMGDIR)/u-boot.elf}" >  $(SDIMGDIR)/boot.bif
+	bash -c "source $(VIVADO_SETTINGS) && bootgen -image $(SDIMGDIR)/boot.bif -arch zynq -o $(SDIMGDIR)/BOOT.bin"
+	mkdir $(SDIMGDIR)/bootbin
+	cp $(SDIMGDIR)/fsbl.elf $(SDIMGDIR)/bootbin
+	cp $(SDIMGDIR)/system_top.bit $(SDIMGDIR)/bootbin
+	cp $(SDIMGDIR)/u-boot.elf $(SDIMGDIR)/bootbin
+	rm $(SDIMGDIR)/fsbl.elf
+	rm $(SDIMGDIR)/system_top.bit
+	rm $(SDIMGDIR)/u-boot.elf
+	rm $(SDIMGDIR)/ramdisk.image.gz 
+	rm $(SDIMGDIR)/boot.bif
